@@ -19,7 +19,7 @@ DIETClassifier stand for Dual Intent Entity from Transformers which can be used 
 
 You can also install all requirement packages by:
 ```sh
-git clone https://github.com/WeiNyn/DIETClassifier-pytorch.git
+git clone https://github.com/longdo12/DIET_pytorch_modified.git
 cd DIETClassifier/
 pip install -r requirements.txt
 ```
