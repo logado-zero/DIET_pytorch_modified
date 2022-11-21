@@ -2,7 +2,6 @@
 
 [![Build Status](https://app.travis-ci.com/travis-ci/travis-rubies.svg?branch=build)](https://app.travis-ci.com/travis-ci/travis-rubies)
 
-[![Build Status](https://app.travis-ci.com/travis-ci/travis-rubies.svg?branch=build)](https://app.travis-ci.com/travis-ci/travis-rubies)
 
 DIETClassifier stand for Dual Intent Entity from Transformers which can be used to do intent classification and entities recognition at the same time.
 
