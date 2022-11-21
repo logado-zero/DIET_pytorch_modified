@@ -1,6 +1,6 @@
 # DIETClassifier - Pytorch - Modified
 
-
+[![Build Status](https://app.travis-ci.com/travis-ci/travis-rubies.svg?branch=build)](https://app.travis-ci.com/travis-ci/travis-rubies)
 
 DIETClassifier stand for Dual Intent Entity from Transformers which can be used to do intent classification and entities recognition at the same time.
 
@@ -28,7 +28,7 @@ pip install -r requirements.txt
 
 You can use demo server to create a server that receive text message and predict intent, entities:
 
-- Download pretrained model from [this link]()
+- Download pretrained model from [this link](https://drive.google.com/drive/folders/1ayzecqsG08SLIczrMVKKSRyJyyJTZmV8?usp=sharing)
 - extract "latest_model" to "DIETClassifier-pytorch/"
 - run
 ```sh
