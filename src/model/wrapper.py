@@ -204,8 +204,8 @@ class DIETClassifierWrapper:
         if not path.exists(dataset_folder):
             raise ValueError(f"Folder {dataset_folder} is not exists")
 
-        # files_list = [path.join(dataset_folder, f) for f in listdir(dataset_folder) if path.isfile(path.join(dataset_folder, f)) and f.endswith(".yml")]
         files_list = [path.join(dataset_folder, "nlu_QnA_converted.yml"), path.join(dataset_folder, "nlu_QnA_converted.yml")]
+
         df, _, _, synonym_dict = make_dataframe(files=files_list)
 
         self.synonym_dict.update(synonym_dict)
