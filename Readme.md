@@ -1,7 +1,6 @@
 # DIETClassifier - Pytorch - Modified
 
 
-[![Build Status](https://travis-ci.org/joemccann/dillinger.svg?branch=master)](https://travis-ci.org/joemccann/dillinger)
 
 DIETClassifier stand for Dual Intent Entity from Transformers which can be used to do intent classification and entities recognition at the same time.
 
