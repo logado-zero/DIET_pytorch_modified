@@ -1,0 +1,80 @@
+model:
+  dataset_folder: dataset
+  device: cuda
+  entities:
+  - month_name
+  - or
+  - flight_stop
+  - economy
+  - flight_number
+  - today_relative
+  - city_name
+  - mod
+  - fare_amount
+  - airport_code
+  - time_relative
+  - meal_code
+  - connect
+  - state_name
+  - airline_code
+  - airline_name
+  - airport_name
+  - round_trip
+  - aircraft_code
+  - days_code
+  - state_code
+  - flight_days
+  - time
+  - flight_time
+  - day_number
+  - restriction_code
+  - meal
+  - meal_description
+  - cost_relative
+  - transport_type
+  - day_name
+  - fare_basis_code
+  - period_of_day
+  - flight_mod
+  - class_type
+  exclude_file: 'null'
+  intents:
+  - distance
+  - capacity
+  - flight and airfare
+  - flight_no
+  - city
+  - airfare
+  - ground_service
+  - abbreviation
+  - restriction
+  - cheapest
+  - airline and flight_no
+  - ground_fare
+  - aircraft and flight and flight_no
+  - airport
+  - airfare and flight_time
+  - flight_time
+  - meal
+  - ground_service and ground_fare
+  - airline
+  - quantity
+  - flight
+  - aircraft
+  model: dslim/bert-base-NER
+  tokenizer: dslim/bert-base-NER
+training:
+  early_stopping_patience: 10
+  early_stopping_threshold: 0.0001
+  logging_dir: logs/
+  num_train_epochs: 100
+  output_dir: results/
+  per_device_eval_batch_size: 4
+  per_device_train_batch_size: 4
+  train_range: 0.95
+  warmup_steps: 500
+  weight_decay: 0.01
+util:
+  ambiguous_threshold: 0.2
+  entities_threshold: 0.5
+  intent_threshold: 0.7
