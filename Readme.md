@@ -1,7 +1,7 @@
 # DIETClassifier - Pytorch - Modified
 
 
-[![Build Status](https://travis-ci.org/joemccann/dillinger.svg?branch=master)](https://travis-ci.org/joemccann/dillinger)
+[![Build Status](https://app.travis-ci.com/travis-ci/travis-rubies.svg?branch=build)](https://app.travis-ci.com/travis-ci/travis-rubies)
 
 DIETClassifier stand for Dual Intent Entity from Transformers which can be used to do intent classification and entities recognition at the same time.
 
@@ -20,7 +20,7 @@ DIETClassifier stand for Dual Intent Entity from Transformers which can be used 
 
 You can also install all requirement packages by:
 ```sh
-git clone https://github.com/WeiNyn/DIETClassifier-pytorch.git
+git clone https://github.com/longdo12/DIET_pytorch_modified.git
 cd DIETClassifier/
 pip install -r requirements.txt
 ```
