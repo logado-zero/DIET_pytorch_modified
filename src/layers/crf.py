@@ -9,7 +9,7 @@ Conditional random field
 from typing import List, Tuple, Dict, Union
 
 import torch
-import utils.util as util
+from ..utils import util
 
 VITERBI_DECODING = Tuple[List[int], float]  # a list of tags, and a viterbi score
 

@@ -10,7 +10,7 @@ from transformers.configuration_utils import PretrainedConfig
 from os import path
 import json
 
-from layers.crf import ConditionalRandomField
+from ..layers.crf import ConditionalRandomField
 
 class DIETClassifierConfig(PretrainedConfig):
     def __init__(self, model: str, entities: List[str] = None, intents: List[str] = None):
