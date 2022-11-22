@@ -134,6 +134,8 @@ class DIETClassifier(BertPreTrainedModel):
         # else: active_labels = entities_labels.view(-1)
 
         entities_loss = self.crf(entities_embed,entities_labels)
+        entities_logits = self.crf.viterbi_tags(entities_embed)
+        entities_logits = [path for path, _ in entities_logits]
 
         intent_logits = self.intents_classifier(pooled_output)
 
