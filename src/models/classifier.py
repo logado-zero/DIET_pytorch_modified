@@ -62,7 +62,7 @@ class DIETClassifier(BertPreTrainedModel):
 
         # self.entities_classifier = nn.Linear(config.hidden_size, self.num_entities)
         self.entities_dense_embed = nn.Linear(config.hidden_size, self.num_entities)
-        self.crf = ConditionalRandomField(self.num_entities, device= self.device)
+        self.crf = ConditionalRandomField(self.num_entities)
         # self.intents_dense_embed = nn.Linear(config.hidden_size, self.num_intents)
         self.intents_classifier = nn.Linear(config.hidden_size, self.num_intents)
 

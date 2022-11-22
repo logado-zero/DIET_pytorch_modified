@@ -84,6 +84,7 @@ class ConditionalRandomField(torch.nn.Module):
         # Initial alpha is the (batch_size, num_tags) tensor of likelihoods combining the
         # transitions to the initial states and the logits for the first timestep.
         if self.include_start_end_transitions:
+
             alpha = self.start_transitions.view(1, num_tags) + logits[0]
         else:
             alpha = logits[0]
@@ -101,7 +102,7 @@ class ConditionalRandomField(torch.nn.Module):
 
             # Add all the scores together and logexp over the current_tag axis.
             inner = broadcast_alpha + emit_scores + transition_scores
-            inner.device = logits.device
+            inner.to(logits.device)
             # In valid positions (mask == True) we want to take the logsumexp over the current_tag dimension
             # of `inner`. Otherwise (mask == False) we want to retain the previous alpha.
             alpha = util.logsumexp(inner, 1) * mask[i].view(batch_size, 1) + alpha * (
