@@ -10,6 +10,7 @@ from transformers.configuration_utils import PretrainedConfig
 from os import path
 import json
 
+from layers.crf import ConditionalRandomField
 
 class DIETClassifierConfig(PretrainedConfig):
     def __init__(self, model: str, entities: List[str] = None, intents: List[str] = None):
@@ -60,7 +61,10 @@ class DIETClassifier(BertPreTrainedModel):
 
         self.dropout = nn.Dropout(config.hidden_dropout_prob)
 
-        self.entities_classifier = nn.Linear(config.hidden_size, self.num_entities)
+        # self.entities_classifier = nn.Linear(config.hidden_size, self.num_entities)
+        self.entities_dense_embed = nn.Linear(config.hidden_size, self.num_entities)
+        self.crf = ConditionalRandomField(self.num_entities)
+        # self.intents_dense_embed = nn.Linear(config.hidden_size, self.num_intents)
         self.intents_classifier = nn.Linear(config.hidden_size, self.num_intents)
 
         self.init_weights()
@@ -121,23 +125,32 @@ class DIETClassifier(BertPreTrainedModel):
         pooled_output = outputs[0][:, :1]
         pooled_output = self.dropout(pooled_output)
 
-        entities_logits = self.entities_classifier(sequence_output)
+        entities_embed = self.entities_dense_embed(sequence_output)
+        # if attention_mask is not None:
+        #     active_loss = attention_mask[:, 1:].reshape(-1) == 1
+            
+        #     active_labels = torch.where(
+        #         active_loss, entities_labels.view(-1))
+        # else: active_labels = entities_labels.view(-1)
+
+        entities_loss = self.crf(entities_embed,entities_labels)
+
         intent_logits = self.intents_classifier(pooled_output)
 
-        entities_loss = None
-        if entities_labels is not None:
-            entities_loss_fct = CrossEntropyLoss()
-            # Only keep active parts of the loss
-            if attention_mask is not None:
-                active_loss = attention_mask[:, 1:].reshape(-1) == 1
-                active_logits = entities_logits.view(-1, self.num_entities)
-                active_labels = torch.where(
-                    active_loss, entities_labels.view(-1),
-                    torch.tensor(entities_loss_fct.ignore_index).type_as(entities_labels)
-                )
-                entities_loss = entities_loss_fct(active_logits, active_labels)
-            else:
-                entities_loss = entities_loss_fct(entities_logits.view(-1, self.num_entities), entities_labels.view(-1))
+        # entities_loss = None
+        # if entities_labels is not None:
+        #     entities_loss_fct = CrossEntropyLoss()
+        #     # Only keep active parts of the loss
+        #     if attention_mask is not None:
+        #         active_loss = attention_mask[:, 1:].reshape(-1) == 1
+        #         active_logits = entities_logits.view(-1, self.num_entities)
+        #         active_labels = torch.where(
+        #             active_loss, entities_labels.view(-1),
+        #             torch.tensor(entities_loss_fct.ignore_index).type_as(entities_labels)
+        #         )
+        #         entities_loss = entities_loss_fct(active_logits, active_labels)
+        #     else:
+        #         entities_loss = entities_loss_fct(entities_logits.view(-1, self.num_entities), entities_labels.view(-1))
 
         intent_loss = None
         if intent_labels is not None:
