@@ -101,7 +101,7 @@ class ConditionalRandomField(torch.nn.Module):
 
             # Add all the scores together and logexp over the current_tag axis.
             inner = broadcast_alpha + emit_scores + transition_scores
-
+            inner.device = logits.device
             # In valid positions (mask == True) we want to take the logsumexp over the current_tag dimension
             # of `inner`. Otherwise (mask == False) we want to retain the previous alpha.
             alpha = util.logsumexp(inner, 1) * mask[i].view(batch_size, 1) + alpha * (
@@ -179,7 +179,7 @@ class ConditionalRandomField(torch.nn.Module):
         """
 
         if mask is None:
-            mask = torch.ones(*tags.size(), dtype=torch.bool)
+            mask = torch.ones(*tags.size(), dtype=torch.bool, device=inputs.device)
         else:
             # The code below fails in weird ways if this isn't a bool tensor, so we make sure.
             mask = mask.to(torch.bool)

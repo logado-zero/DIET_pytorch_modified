@@ -51,7 +51,6 @@ class DIETClassifier(BertPreTrainedModel):
             config = pretrained_model.config
 
         super().__init__(config)
-
         self.entities_list = ["O"] + config.entities
         self.num_entities = len(self.entities_list)
         self.intents_list = config.intents
@@ -63,7 +62,7 @@ class DIETClassifier(BertPreTrainedModel):
 
         # self.entities_classifier = nn.Linear(config.hidden_size, self.num_entities)
         self.entities_dense_embed = nn.Linear(config.hidden_size, self.num_entities)
-        self.crf = ConditionalRandomField(self.num_entities)
+        self.crf = ConditionalRandomField(self.num_entities, device= self.device)
         # self.intents_dense_embed = nn.Linear(config.hidden_size, self.num_intents)
         self.intents_classifier = nn.Linear(config.hidden_size, self.num_intents)
 
