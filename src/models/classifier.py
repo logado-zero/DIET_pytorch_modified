@@ -124,7 +124,7 @@ class DIETClassifier(BertPreTrainedModel):
         pooled_output = outputs[0][:, :1]
         pooled_output = self.dropout(pooled_output)
 
-        entities_embed = self.entities_dense_embed(sequence_output)
+        entities_logits = self.entities_dense_embed(sequence_output)
         # if attention_mask is not None:
         #     active_loss = attention_mask[:, 1:].reshape(-1) == 1
             
@@ -132,26 +132,26 @@ class DIETClassifier(BertPreTrainedModel):
         #         active_loss, entities_labels.view(-1))
         # else: active_labels = entities_labels.view(-1)
 
-        entities_loss = -self.crf(entities_embed,entities_labels)
-        entities_logits = self.crf.viterbi_tags(entities_embed)
-        entities_logits = [path for path, _ in entities_logits]
+        # entities_loss = -self.crf(entities_embed,entities_labels)
+        # entities_logits = self.crf.viterbi_tags(entities_embed)
+        # entities_logits = [path for path, _ in entities_logits]
 
         intent_logits = self.intents_classifier(pooled_output)
 
-        # entities_loss = None
-        # if entities_labels is not None:
-        #     entities_loss_fct = CrossEntropyLoss()
-        #     # Only keep active parts of the loss
-        #     if attention_mask is not None:
-        #         active_loss = attention_mask[:, 1:].reshape(-1) == 1
-        #         active_logits = entities_logits.view(-1, self.num_entities)
-        #         active_labels = torch.where(
-        #             active_loss, entities_labels.view(-1),
-        #             torch.tensor(entities_loss_fct.ignore_index).type_as(entities_labels)
-        #         )
-        #         entities_loss = entities_loss_fct(active_logits, active_labels)
-        #     else:
-        #         entities_loss = entities_loss_fct(entities_logits.view(-1, self.num_entities), entities_labels.view(-1))
+        entities_loss = None
+        if entities_labels is not None:
+            entities_loss_fct = CrossEntropyLoss()
+            # Only keep active parts of the loss
+            if attention_mask is not None:
+                active_loss = attention_mask[:, 1:].reshape(-1) == 1
+                active_logits = entities_logits.view(-1, self.num_entities)
+                active_labels = torch.where(
+                    active_loss, entities_labels.view(-1),
+                    torch.tensor(entities_loss_fct.ignore_index).type_as(entities_labels)
+                )
+                entities_loss = entities_loss_fct(active_logits, active_labels)
+            else:
+                entities_loss = entities_loss_fct(entities_logits.view(-1, self.num_entities), entities_labels.view(-1))
 
         intent_loss = None
         if intent_labels is not None:
@@ -163,7 +163,7 @@ class DIETClassifier(BertPreTrainedModel):
                 intent_loss = intent_loss_fct(intent_logits.view(-1, self.num_intents), intent_labels.view(-1))
 
         if (entities_labels is not None) and (intent_labels is not None):
-            loss = entities_loss * 0.1 + intent_loss * 0.9
+            loss = entities_loss * 0.5 + intent_loss * 0.5
         else:
             loss = None
 
