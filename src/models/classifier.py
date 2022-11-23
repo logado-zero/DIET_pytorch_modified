@@ -62,7 +62,7 @@ class DIETClassifier(BertPreTrainedModel):
 
         # self.entities_classifier = nn.Linear(config.hidden_size, self.num_entities)
         self.entities_dense_embed = nn.Linear(config.hidden_size, self.num_entities)
-        self.crf = ConditionalRandomField(self.num_entities)
+        # self.crf = ConditionalRandomField(self.num_entities)
         # self.intents_dense_embed = nn.Linear(config.hidden_size, self.num_intents)
         self.intents_classifier = nn.Linear(config.hidden_size, self.num_intents)
 
@@ -131,8 +131,8 @@ class DIETClassifier(BertPreTrainedModel):
         #     active_labels = torch.where(
         #         active_loss, entities_labels.view(-1))
         # else: active_labels = entities_labels.view(-1)
-
-        # entities_loss = -self.crf(entities_embed,entities_labels)
+        # if entities_labels is not None:
+        #     entities_loss = -self.crf(entities_embed,entities_labels)
         # entities_logits = self.crf.viterbi_tags(entities_embed)
         # entities_logits = [path for path, _ in entities_logits]
 
