@@ -63,14 +63,15 @@ model:
   - aircraft
   model: microsoft/xtremedistil-l6-h256-uncased
   tokenizer: microsoft/xtremedistil-l6-h256-uncased
+  embedding_dimension: 20
 training:
   early_stopping_patience: 10
   early_stopping_threshold: 0.0001
   logging_dir: logs/
   num_train_epochs: 100
   output_dir: results/
-  per_device_eval_batch_size: 32
-  per_device_train_batch_size: 32
+  per_device_eval_batch_size: 2
+  per_device_train_batch_size: 2
   train_range: 0.95
   warmup_steps: 500
   weight_decay: 0.01
