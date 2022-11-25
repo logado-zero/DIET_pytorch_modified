@@ -22,6 +22,22 @@ class DIETClassifierConfig(PretrainedConfig):
         self.hidden_dropout_prob = None
         self.hidden_size = None
 
+class ContrastiveLoss(nn.Module):
+  def __init__(self, m=2.0):
+    super(ContrastiveLoss, self).__init__()  # pre 3.3 syntax
+    self.m = m  # margin or radius
+
+  def forward(self, y1, y2, d=0):
+    # d = 0 means y1 and y2 are supposed to be same
+    # d = 1 means y1 and y2 are supposed to be different
+    euc_dist = nn.functional.pairwise_distance(y1, y2)
+
+    if d == 0:
+      return torch.mean(torch.pow(euc_dist, 2))  # distance squared
+    else:  # d == 1
+      delta = self.m - euc_dist  # sort of reverse distance
+      delta = torch.clamp(delta, min=0.0, max=None)
+      return torch.mean(torch.pow(delta, 2))  # mean over all rows
 
 class DIETClassifier(BertPreTrainedModel):
     def __init__(self, config: DIETClassifierConfig):
@@ -189,8 +205,8 @@ class DIETClassifier(BertPreTrainedModel):
         if intent_labels is not None:
             intent_labels = self.intents_label_embed(intent_labels)
             intent_labels = self.intents_label_dense(intent_labels)
-            intent_loss_fct = MSELoss()
-            intent_loss = intent_loss_fct(intent_output_embedd.view(-1, self.embedding_dimension), intent_labels)
+            intent_loss_fct = ContrastiveLoss()
+            intent_loss = intent_loss_fct(intent_output_embedd.view(-1, self.embedding_dimension), intent_labels,d=0)
             
 
         if (entities_labels is not None) and (intent_labels is not None):
