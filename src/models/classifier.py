@@ -69,8 +69,9 @@ class DIETClassifier(BertPreTrainedModel):
         # self.entities_classifier = nn.Linear(config.hidden_size, self.num_entities)
         self.entities_dense_embed = nn.Linear(config.hidden_size, self.num_entities)
         # self.crf = ConditionalRandomField(self.num_entities)
-        self.intents_dense_embed = nn.Linear(config.hidden_size, self.embedding_dimension)
-        self.intents_label_embed = nn.Embedding(self.num_intents+2,self.embedding_dimension)
+        self.intents_output_embed = nn.Linear(config.hidden_size, self.embedding_dimension)
+        self.intents_label_embed = nn.Embedding(self.num_intents+2,config.hidden_size)
+        self.intents_label_dense = nn.Linear(config.hidden_size,self.embedding_dimension)
 
         self.intents_classifier = nn.Linear(config.hidden_size, self.num_intents)
 
@@ -83,8 +84,8 @@ class DIETClassifier(BertPreTrainedModel):
                 raise  RuntimeError(f"Cannot load state dict from checkpoint by error: {ex}")
     def logit_intent(self, embed_out_intents: torch.Tensor):
         all_intent = torch.LongTensor(list(range(0,self.num_intents))).to(embed_out_intents.device)
-        embed_all_intent =  self.intents_label_embed(all_intent)
-
+        embed_all_intent =  self.intents_label_dense(self.intents_label_embed(all_intent))
+        
         cosin_func = nn.CosineSimilarity(dim = 1)
         cosin_list = []
         for out_intent in embed_out_intents:
@@ -154,9 +155,9 @@ class DIETClassifier(BertPreTrainedModel):
         # entities_logits = self.crf.viterbi_tags(entities_embed)
         # entities_logits = [path for path, _ in entities_logits]
         
-        intent_input_embedd = self.intents_dense_embed(pooled_output)
+        intent_output_embedd = self.intents_output_embed(pooled_output)
         
-        intent_logits = self.logit_intent(intent_input_embedd)
+        intent_logits = self.logit_intent(intent_output_embedd)
         
         #intent_logits = self.intents_classifier(pooled_output)
         
@@ -187,8 +188,9 @@ class DIETClassifier(BertPreTrainedModel):
         intent_loss = None
         if intent_labels is not None:
             intent_labels = self.intents_label_embed(intent_labels)
+            intent_labels = self.intents_label_dense(intent_labels)
             intent_loss_fct = MSELoss()
-            intent_loss = intent_loss_fct(intent_input_embedd.view(-1, self.embedding_dimension), intent_labels)
+            intent_loss = intent_loss_fct(intent_output_embedd.view(-1, self.embedding_dimension), intent_labels)
             
 
         if (entities_labels is not None) and (intent_labels is not None):
