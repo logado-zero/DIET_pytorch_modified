@@ -186,9 +186,9 @@ class DIETClassifier(BertPreTrainedModel):
 
         intent_loss = None
         if intent_labels is not None:
-            intent_label = self.intents_label_embed(intent_labels)
+            intent_labels = self.intents_label_embed(intent_labels)
             intent_loss_fct = MSELoss()
-            intent_loss = intent_loss_fct(intent_input_embedd.view(-1, self.num_intents), intent_labels)
+            intent_loss = intent_loss_fct(intent_input_embedd.view(-1, self.embedding_dimension), intent_labels)
             
 
         if (entities_labels is not None) and (intent_labels is not None):
