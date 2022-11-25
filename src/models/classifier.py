@@ -32,7 +32,7 @@ class DIETClassifier(BertPreTrainedModel):
         """
         if config.embedding_dimension is None: self.embedding_dimension = 20
         else: self.embedding_dimension = config.embedding_dimension
-        self.embedding_tensor = 5
+        
 
         if path.exists(config.model):
             try:
@@ -70,7 +70,7 @@ class DIETClassifier(BertPreTrainedModel):
         self.entities_dense_embed = nn.Linear(config.hidden_size, self.num_entities)
         # self.crf = ConditionalRandomField(self.num_entities)
         self.intents_dense_embed = nn.Linear(config.hidden_size, self.embedding_dimension)
-        self.intents_label_embed = nn.Embedding(self.embedding_tensor,self.embedding_dimension)
+        self.intents_label_embed = nn.Embedding(self.num_intents+2,self.embedding_dimension)
 
         self.intents_classifier = nn.Linear(config.hidden_size, self.num_intents)
 
