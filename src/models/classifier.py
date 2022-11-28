@@ -9,6 +9,7 @@ from transformers.configuration_utils import PretrainedConfig
 
 from os import path
 import json
+from random import choice
 
 from ..layers.crf import ConditionalRandomField
 
@@ -98,16 +99,46 @@ class DIETClassifier(BertPreTrainedModel):
                 self.load_state_dict(checkpoint, strict=False)
             except Exception as ex:
                 raise  RuntimeError(f"Cannot load state dict from checkpoint by error: {ex}")
-    def logit_intent(self, embed_out_intents: torch.Tensor):
-        all_intent = torch.LongTensor(list(range(0,self.num_intents))).to(embed_out_intents.device)
+
+    def embed_all_intent(self, num_intent:int, device: torch.device):
+        """
+        Embed all intent through Embed Layer
+
+        :param num_intent:  the number of intents in vocabulary
+        :param device:      device run training
+        """
+        all_intent = torch.LongTensor(list(range(0,self.num_intents))).to(device)
         embed_all_intent =  self.intents_label_dense(self.intents_label_embed(all_intent))
-        
+
+        return embed_all_intent
+    def logit_intent(self, embed_out_intents: torch.Tensor, embed_all_intent: torch.Tensor):
+        """
+        Predict logit intent
+
+        :param embed_out_intents:   embed intents of samples through model
+        :param embed_all_intent:    embed all intent through Embed Layer
+        """
         cosin_func = nn.CosineSimilarity(dim = 1)
         cosin_list = []
         for out_intent in embed_out_intents:
             cosin_list.append(cosin_func(out_intent, embed_all_intent))
 
         return torch.stack(cosin_list, dim = 0)
+
+    def _neg_sample(self, num_intent:int, intent_labels: torch.Tensor,embed_all_intent: torch.Tensor):
+        """
+        generate negative sample
+
+        :param num_intent:          the number of intents in vocabulary
+        :param intent_labels:       positive labels
+        :param embed_all_intent:    embed all intent through Embed Layer
+        """
+        all_label = torch.Tensor(list(range(num_intent)))
+        neg_label = []
+        for sample in intent_labels:
+            neg_label.append(embed_all_intent[choice([label for label in all_label if label != sample])])
+
+        return torch.stack(neg_label, dim = 0)
 
     def forward(
             self,
@@ -171,9 +202,10 @@ class DIETClassifier(BertPreTrainedModel):
         # entities_logits = self.crf.viterbi_tags(entities_embed)
         # entities_logits = [path for path, _ in entities_logits]
         
-        intent_output_embedd = self.intents_output_embed(pooled_output)
-        
-        intent_logits = self.logit_intent(intent_output_embedd)
+        intent_output_embed = self.intents_output_embed(pooled_output)
+
+        all_intent = self.embed_all_intent(num_intent= self.num_intents, device= intent_output_embed.device)
+        intent_logits = self.logit_intent(intent_output_embed, all_intent)
         
         #intent_logits = self.intents_classifier(pooled_output)
         
@@ -200,13 +232,17 @@ class DIETClassifier(BertPreTrainedModel):
         #     else:
         #         intent_loss_fct = CrossEntropyLoss()
         #         intent_loss = intent_loss_fct(intent_logits.view(-1, self.num_intents), intent_labels.view(-1))
-
+        
         intent_loss = None
         if intent_labels is not None:
-            intent_labels = self.intents_label_embed(intent_labels)
-            intent_labels = self.intents_label_dense(intent_labels)
+            intent_labels_embed = self.intents_label_embed(intent_labels)
+            intent_labels_embed = self.intents_label_dense(intent_labels_embed)
+
+            embed_neg_label  =self._neg_sample(num_intent= self.num_intents,intent_labels = intent_labels,embed_all_intent= all_intent)
+            
             intent_loss_fct = ContrastiveLoss()
-            intent_loss = intent_loss_fct(intent_output_embedd.view(-1, self.embedding_dimension), intent_labels,d=0)
+            intent_loss = intent_loss_fct(intent_output_embed.view(-1, self.embedding_dimension), intent_labels_embed,d=0)
+            intent_loss += intent_loss_fct(intent_output_embed.view(-1, self.embedding_dimension), embed_neg_label,d=1)
             
 
         if (entities_labels is not None) and (intent_labels is not None):
