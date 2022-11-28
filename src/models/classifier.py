@@ -133,9 +133,9 @@ class DIETClassifier(BertPreTrainedModel):
         :param intent_labels:       positive labels
         :param embed_all_intent:    embed all intent through Embed Layer
         """
-        all_label = torch.Tensor(list(range(num_intent)))
+        all_label = torch.LongTensor(list(range(num_intent))).to(intent_labels.device)
         neg_label = []
-        for sample in intent_labels:
+        for sample in intent_labels.type(torch.LongTensor):
             neg_label.append(embed_all_intent[choice([label for label in all_label if label != sample])])
 
         return torch.stack(neg_label, dim = 0)
@@ -239,7 +239,7 @@ class DIETClassifier(BertPreTrainedModel):
             intent_labels_embed = self.intents_label_dense(intent_labels_embed)
 
             embed_neg_label  =self._neg_sample(num_intent= self.num_intents,intent_labels = intent_labels,embed_all_intent= all_intent)
-            
+
             intent_loss_fct = ContrastiveLoss()
             intent_loss = intent_loss_fct(intent_output_embed.view(-1, self.embedding_dimension), intent_labels_embed,d=0)
             intent_loss += intent_loss_fct(intent_output_embed.view(-1, self.embedding_dimension), embed_neg_label,d=1)
