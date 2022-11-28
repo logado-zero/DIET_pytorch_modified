@@ -59,7 +59,7 @@ class DIETClassifierWrapper:
 
         self.training_config = training_config_dict
         self.tokenizer = BertTokenizerFast.from_pretrained(model_config_dict["tokenizer"])
-        self.model = DIETClassifier(config=self.model_config)
+        self.model = DIETClassifier(config=self.model_config, embedding_dimension= model_config_dict["embedding_dimension"])
 
         self.model.to(self.device)
 

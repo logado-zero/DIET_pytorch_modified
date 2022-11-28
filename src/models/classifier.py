@@ -19,7 +19,6 @@ class DIETClassifierConfig(PretrainedConfig):
         self.model = model
         self.entities = entities
         self.intents = intents
-        self.embedding_dimension = None
         self.hidden_dropout_prob = None
         self.hidden_size = None
 
@@ -41,14 +40,14 @@ class ContrastiveLoss(nn.Module):
       return torch.mean(torch.pow(delta, 2))  # mean over all rows
 
 class DIETClassifier(BertPreTrainedModel):
-    def __init__(self, config: DIETClassifierConfig):
+    def __init__(self, config: DIETClassifierConfig, embedding_dimension: int = None):
         """
         Create DIETClassifier model
 
         :param config: config for model
         """
-        if config.embedding_dimension is None: self.embedding_dimension = 20
-        else: self.embedding_dimension = config.embedding_dimension
+        if embedding_dimension is None: self.embedding_dimension = 128
+        else: self.embedding_dimension = embedding_dimension
         
 
         if path.exists(config.model):
