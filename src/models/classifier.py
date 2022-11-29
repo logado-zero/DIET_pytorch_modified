@@ -117,10 +117,12 @@ class DIETClassifier(BertPreTrainedModel):
         :param embed_out_intents:   embed intents of samples through model
         :param embed_all_intent:    embed all intent through Embed Layer
         """
-        cosin_func = nn.CosineSimilarity(dim = 1)
+        #cosin_func = nn.CosineSimilarity(dim = 1)
+        
         cosin_list = []
         for out_intent in embed_out_intents:
-            cosin_list.append(cosin_func(out_intent, embed_all_intent))
+        #    cosin_list.append(cosin_func(out_intent, embed_all_intent))
+            cosin_list.append(nn.functional.pairwise_distance(out_intent, embed_all_intent))
 
         return torch.stack(cosin_list, dim = 0)
 
