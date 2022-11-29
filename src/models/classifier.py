@@ -118,11 +118,14 @@ class DIETClassifier(BertPreTrainedModel):
         :param embed_all_intent:    embed all intent through Embed Layer
         """
         #cosin_func = nn.CosineSimilarity(dim = 1)
-        
+        m = 2
         cosin_list = []
         for out_intent in embed_out_intents:
         #    cosin_list.append(cosin_func(out_intent, embed_all_intent))
-            cosin_list.append(nn.functional.pairwise_distance(out_intent, embed_all_intent))
+            euc_dist = nn.functional.pairwise_distance(out_intent, embed_all_intent)
+            delta = m - euc_dist  # sort of reverse distance
+            delta = torch.clamp(delta, min=0.0, max=None)
+            cosin_list.append(delta)
 
         return torch.stack(cosin_list, dim = 0)
 
