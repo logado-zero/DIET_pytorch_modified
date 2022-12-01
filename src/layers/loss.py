@@ -1,6 +1,6 @@
 import torch
 import torch.nn as nn
-from torch.nn.functional import pairwise_distance, normalize
+from torch.nn.functional import pairwise_distance, normalize, nll_loss,log_softmax, binary_cross_entropy_with_logits
 
 class ContrastiveLoss(nn.Module):
   def __init__(self, m=2.0):
@@ -78,6 +78,71 @@ class SingleLabelDotProductLoss(nn.Module):
         sim = torch.sum(a * b, dim=-1)
         
         return sim
+    def _loss_margin(
+        self,
+        sim_pos: torch.Tensor,
+        sim_neg: torch.Tensor,
+    ) -> torch.Tensor:
+        """Define max margin loss."""
+        loss = torch.maximum(torch.Tensor([0]).to(sim_pos.device), self.mu_pos - torch.squeeze(sim_pos, axis=-1))
+
+        if self.use_max_sim_neg:
+            # minimize only maximum similarity over incorrect actions
+            max_sim_neg = torch.max(sim_neg)
+            loss += torch.maximum(torch.Tensor([0]).to(max_sim_neg.device), self.mu_neg + max_sim_neg)
+        else:
+            # minimize all similarities with incorrect actions
+            max_margin = torch.maximum(torch.Tensor([0]).to(sim_neg.device), self.mu_neg + sim_neg)
+            loss += torch.max(max_margin)
+        return torch.mean(loss)
+    def _scale_loss(log_likelihood: torch.Tensor) -> torch.Tensor:
+        """Creates scaling loss coefficient depending on the prediction probability.
+
+        Arguments:
+            log_likelihood: a tensor, log-likelihood of prediction
+
+        Returns:
+            Scaling tensor.
+        """
+        p = torch.exp(log_likelihood)
+        # only scale loss if some examples are already learned
+        return torch.where(
+            torch.max(p) > 0.5,
+            lambda: torch.pow((1 - p) / 0.5, 4).detach(),
+            lambda: torch.ones_like(p),
+        )
+    def _loss_cross_entropy(
+        self,
+        sim_pos: torch.Tensor,
+        sim_neg: torch.Tensor,
+    )   -> torch.Tensor:
+        """Defines cross entropy loss."""
+
+        # Compute softmax loss
+
+        # Similarity terms between input and label should be optimized relative
+        # to each other and hence use them as logits for softmax term
+        logits = torch.cat((sim_pos, sim_neg), dim=-1)
+        # create label_ids for softmax
+        softmax_label_ids = torch.zeros_like(logits[..., 0]).to(sim_pos.device)
+        soft_max_loss = nll_loss(log_softmax(logits, dim=-1), softmax_label_ids)
+
+        # Compute sigmoid loss 
+
+        # Constrain similarity values in a range by applying sigmoid
+        # on them individually so that they saturate at extreme values.
+        sigmoid_labels = torch.cat([torch.ones_like(logits[..., :1]),torch.zeros_like(logits[..., 1:])], dim=-1).to(sim_pos.device)
+
+        sigmoid_loss = binary_cross_entropy_with_logits(logits,sigmoid_labels)
+        sigmoid_loss = torch.mean(sigmoid_loss, dim=-1)
+
+        loss = soft_max_loss + sigmoid_loss
+
+        loss *= self._scale_loss(-loss)
+        if len(loss.shape) == 2:
+            loss = torch.mean(loss, dim=-1)
+
+        return loss
 
     def forward(  
         self,
@@ -102,16 +167,7 @@ class SingleLabelDotProductLoss(nn.Module):
         sim_pos = self.sim(inputs_embed, labels_embed_positive.float())
         sim_neg = self.sim(inputs_embed, labels_embed_negative.float())
 
-        loss = torch.maximum(torch.Tensor([0]).to(sim_pos.device), self.mu_pos - torch.squeeze(sim_pos, axis=-1))
-
-        if self.use_max_sim_neg:
-            # minimize only maximum similarity over incorrect actions
-            max_sim_neg = torch.max(sim_neg)
-            loss += torch.maximum(torch.Tensor([0]).to(max_sim_neg.device), self.mu_neg + max_sim_neg)
-        else:
-            # minimize all similarities with incorrect actions
-            max_margin = torch.maximum(torch.Tensor([0]).to(sim_neg.device), self.mu_neg + sim_neg)
-            loss += torch.max(max_margin)
-        loss = torch.mean(loss)
+        #loss = self._loss_margin(sim_pos,sim_neg)
+        loss = self._loss_cross_entropy(sim_pos,sim_neg)
 
         return loss
