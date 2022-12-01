@@ -48,7 +48,8 @@ class SingleLabelDotProductLoss(nn.Module):
                 the maximum similarity between embeddings of different labels,
                 used only if `loss_type` is set to `margin`.
         """
-        
+        super(SingleLabelDotProductLoss, self).__init__()
+
         self.mu_pos = mu_pos
         self.mu_neg = mu_neg
         self.use_max_sim_neg = use_max_sim_neg
@@ -101,15 +102,15 @@ class SingleLabelDotProductLoss(nn.Module):
         sim_pos = self.sim(inputs_embed, labels_embed_positive.float())
         sim_neg = self.sim(inputs_embed, labels_embed_negative.float())
 
-        loss = torch.maximum(torch.Tensor([0]), self.mu_pos - torch.squeeze(sim_pos, axis=-1))
+        loss = torch.maximum(torch.Tensor([0]).to(sim_pos.device), self.mu_pos - torch.squeeze(sim_pos, axis=-1))
 
         if self.use_max_sim_neg:
             # minimize only maximum similarity over incorrect actions
             max_sim_neg = torch.max(sim_neg)
-            loss += torch.maximum(torch.Tensor([0]), self.mu_neg + max_sim_neg)
+            loss += torch.maximum(torch.Tensor([0]).to(max_sim_neg.device), self.mu_neg + max_sim_neg)
         else:
             # minimize all similarities with incorrect actions
-            max_margin = torch.maximum(torch.Tensor([0]), self.mu_neg + sim_neg)
+            max_margin = torch.maximum(torch.Tensor([0]).to(sim_neg.device), self.mu_neg + sim_neg)
             loss += torch.max(max_margin)
         loss = torch.mean(loss)
 
