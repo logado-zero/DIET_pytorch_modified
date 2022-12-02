@@ -95,7 +95,7 @@ class SingleLabelDotProductLoss(nn.Module):
             max_margin = torch.maximum(torch.Tensor([0]).to(sim_neg.device), self.mu_neg + sim_neg)
             loss += torch.max(max_margin)
         return torch.mean(loss)
-    def _scale_loss(log_likelihood: torch.Tensor) -> torch.Tensor:
+    def _scale_loss(self, log_likelihood: torch.Tensor) -> torch.Tensor:
         """Creates scaling loss coefficient depending on the prediction probability.
 
         Arguments:
@@ -122,9 +122,9 @@ class SingleLabelDotProductLoss(nn.Module):
 
         # Similarity terms between input and label should be optimized relative
         # to each other and hence use them as logits for softmax term
-        logits = torch.cat((sim_pos, sim_neg), dim=-1)
+        logits = torch.cat((torch.reshape(sim_pos,(sim_pos.size()[0], 1)), torch.reshape(sim_neg,(sim_neg.size()[0], 1))), dim=-1)
         # create label_ids for softmax
-        softmax_label_ids = torch.zeros_like(logits[..., 0]).to(sim_pos.device)
+        softmax_label_ids = torch.zeros_like(logits[..., 0]).long().to(sim_pos.device)
         soft_max_loss = nll_loss(log_softmax(logits, dim=-1), softmax_label_ids)
 
         # Compute sigmoid loss 
