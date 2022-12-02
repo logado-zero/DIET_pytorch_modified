@@ -12,7 +12,7 @@ import json
 from random import choice
 
 from ..layers.crf import ConditionalRandomField
-from ..layers.loss import ContrastiveLoss
+from ..layers.loss import ContrastiveLoss, SingleLabelDotProductLoss
 
 class DIETClassifierConfig(PretrainedConfig):
     def __init__(self, model: str, entities: List[str] = None, intents: List[str] = None):
@@ -229,9 +229,13 @@ class DIETClassifier(BertPreTrainedModel):
 
             embed_neg_label  =self._neg_sample(num_intent= self.num_intents,intent_labels = intent_labels,embed_all_intent= all_intent)
 
-            intent_loss_fct = ContrastiveLoss()
-            intent_loss = intent_loss_fct(intent_output_embed.view(-1, self.embedding_dimension), intent_labels_embed,d=0)
-            intent_loss += intent_loss_fct(intent_output_embed.view(-1, self.embedding_dimension), embed_neg_label,d=1)
+            intent_loss_fct = SingleLabelDotProductLoss()
+            # intent_loss_fct = ContrastiveLoss()
+            # intent_loss = intent_loss_fct(intent_output_embed.view(-1, self.embedding_dimension), intent_labels_embed,d=0)
+            # intent_loss += intent_loss_fct(intent_output_embed.view(-1, self.embedding_dimension), embed_neg_label,d=1)
+            ntent_loss = intent_loss_fct(inputs_embed = intent_output_embed.view(-1, self.embedding_dimension),
+                                            labels_embed_positive= intent_labels_embed,
+                                            labels_embed_negative= embed_neg_label)
             
 
         if (entities_labels is not None) and (intent_labels is not None):

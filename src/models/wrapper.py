@@ -89,30 +89,19 @@ class DIETClassifierWrapper:
         :param intent_logits: output from model
         :return: dictionary of predicted intent
         """
-        softmax_intents = self.softmax(intent_logits)
+        softmax = torch.nn.Softmax(dim=-1)
+        softmax_intents = softmax(intent_logits)
 
         predicted_intents = []
-
         for sentence in softmax_intents:
-            sentence = sentence[0]
 
-            sorted_sentence = sentence.clone()
-            sorted_sentence, _ = torch.sort(sorted_sentence)
+            max_probability = torch.argmax(sentence)
+            
 
-            if sorted_sentence[-1] >= self.util_config["intent_threshold"] and (
-                    sorted_sentence[-1] - sorted_sentence[-2]) >= self.util_config["ambiguous_threshold"]:
-                max_probability = torch.argmax(sentence)
-            else:
-                max_probability = -1
-
-            predicted_intents.append({
-                "intent": None if max_probability == -1 else self.intents[max_probability],
-                "intent_ranking": {
-                    intent_name: probability.item() for intent_name, probability in zip(self.intents, sentence)
-                }
-            })
+            predicted_intents.append(max_probability)  
 
         return predicted_intents
+        
 
     def convert_entities_logits(self, entities_logits: torch.tensor, offset_mapping: torch.tensor) -> List[
         List[Dict[str, Any]]]:
@@ -123,27 +112,24 @@ class DIETClassifierWrapper:
         :param offset_mapping: offset mapping for sentences
         :return: list of predicted entities
         """
-        softmax_entities = self.softmax(entities_logits)
-
         predicted_entities = []
 
-        for sentence, offset in zip(softmax_entities, offset_mapping):
+        for sentence, offset in zip(entities_logits, offset_mapping):
             predicted_entities.append([])
             latest_entity = None
-            for word, token_offset in zip(sentence, offset[1:]):
-                max_probability = torch.argmax(word)
-                if word[max_probability] >= self.util_config["entities_threshold"] and max_probability != 0:
-                    if self.entities[max_probability] != latest_entity:
-                        latest_entity = self.entities[max_probability]
+            for word, token_offset in zip(sentence, offset[1:]):           
+                if  word != 0:
+                    if word != latest_entity:
+                        latest_entity = word
                         predicted_entities[-1].append({
-                            "entity_name": self.entities[max_probability],
+                            "entity_name": word,
                             "start": token_offset[0].item(),
                             "end": token_offset[1].item()
                         })
                     else:
                         predicted_entities[-1][-1]["end"] = token_offset[1].item()
                 else:
-                    latest_entity = None
+                    latest_entity = None 
 
         return predicted_entities
 
