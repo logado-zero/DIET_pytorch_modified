@@ -180,23 +180,13 @@ class DIETClassifier(BertPreTrainedModel):
 
         entities_logits = self.entities_dense_embed(sequence_output)
 
-        # if attention_mask is not None:
-        #     active_loss = attention_mask[:, 1:].reshape(-1) == 1
-            
-        #     active_labels = torch.where(
-        #         active_loss, entities_labels.view(-1))
-        # else: active_labels = entities_labels.view(-1)
-        # if entities_labels is not None:
-        #     entities_loss = -self.crf(entities_embed,entities_labels)
-        # entities_logits = self.crf.viterbi_tags(entities_embed)
-        # entities_logits = [path for path, _ in entities_logits]
         
         intent_output_embed = self.intents_output_embed(pooled_output)
 
         all_intent = self.embed_all_intent(num_intent= self.num_intents, device= intent_output_embed.device)
         intent_logits = self.logit_intent(intent_output_embed, all_intent)
         
-        #intent_logits = self.intents_classifier(pooled_output)
+     
         
         entities_loss = None
         if entities_labels is not None:
@@ -213,14 +203,7 @@ class DIETClassifier(BertPreTrainedModel):
             else:
                 entities_loss = entities_loss_fct(entities_logits.view(-1, self.num_entities), entities_labels.view(-1))
 
-        # intent_loss = None
-        # if intent_labels is not None:
-        #     if self.num_intents == 1:
-        #         intent_loss_fct = MSELoss()
-        #         intent_loss = intent_loss_fct(intent_logits.view(-1), intent_labels.view(-1))
-        #     else:
-        #         intent_loss_fct = CrossEntropyLoss()
-        #         intent_loss = intent_loss_fct(intent_logits.view(-1, self.num_intents), intent_labels.view(-1))
+       
         
         intent_loss = None
         if intent_labels is not None:
@@ -230,10 +213,8 @@ class DIETClassifier(BertPreTrainedModel):
             embed_neg_label  =self._neg_sample(num_intent= self.num_intents,intent_labels = intent_labels,embed_all_intent= all_intent)
 
             intent_loss_fct = SingleLabelDotProductLoss()
-            # intent_loss_fct = ContrastiveLoss()
-            # intent_loss = intent_loss_fct(intent_output_embed.view(-1, self.embedding_dimension), intent_labels_embed,d=0)
-            # intent_loss += intent_loss_fct(intent_output_embed.view(-1, self.embedding_dimension), embed_neg_label,d=1)
-            ntent_loss = intent_loss_fct(inputs_embed = intent_output_embed.view(-1, self.embedding_dimension),
+    
+            intent_loss = intent_loss_fct(inputs_embed = intent_output_embed.view(-1, self.embedding_dimension),
                                             labels_embed_positive= intent_labels_embed,
                                             labels_embed_negative= embed_neg_label)
             
