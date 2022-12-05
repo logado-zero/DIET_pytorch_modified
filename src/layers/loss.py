@@ -108,8 +108,8 @@ class SingleLabelDotProductLoss(nn.Module):
         # only scale loss if some examples are already learned
         return torch.where(
             torch.max(p) > 0.5,
-            lambda: torch.pow((1 - p) / 0.5, 4).detach(),
-            lambda: torch.ones_like(p),
+            torch.pow((1 - p) / 0.5, 4).detach(),
+            torch.ones_like(p),
         )
     def _loss_cross_entropy(
         self,
