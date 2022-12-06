@@ -133,9 +133,9 @@ class SingleLabelDotProductLoss(nn.Module):
         # on them individually so that they saturate at extreme values.
         sigmoid_labels = torch.cat([torch.ones_like(logits[..., :1]),torch.zeros_like(logits[..., 1:])], dim=-1).to(sim_pos.device)
 
-        sigmoid_loss = binary_cross_entropy_with_logits(logits,sigmoid_labels, reduction='none')
+        sigmoid_loss = binary_cross_entropy_with_logits(logits,sigmoid_labels)
         sigmoid_loss = torch.mean(sigmoid_loss, dim=-1)
-
+ 
         loss = soft_max_loss + sigmoid_loss
 
         loss *= self._scale_loss(-loss)

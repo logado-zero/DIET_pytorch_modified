@@ -176,7 +176,7 @@ class DIETClassifier(BertPreTrainedModel):
         sequence_output = self.dropout(sequence_output)
 
         # pooled_output = outputs[0][:, :1]
-        pooled_output = outputs[1]  #[CLS]
+        pooled_output = outputs[1].unsqueeze(1)  #[CLS]
         pooled_output = self.dropout(pooled_output)
 
         entities_logits = self.entities_dense_embed(sequence_output)
@@ -219,7 +219,6 @@ class DIETClassifier(BertPreTrainedModel):
                                             labels_embed_positive= intent_labels_embed,
                                             labels_embed_negative= embed_neg_label)
             
-
         if (entities_labels is not None) and (intent_labels is not None):
             loss = entities_loss * 0.5 + intent_loss * 0.5
         else:
