@@ -8,7 +8,7 @@ import torch
 
 class DIETTrainer:
     def __init__(self, model, dataset, train_range: 0.95, output_dir: str = "results", num_train_epochs: int = 100, per_device_train_batch_size: int = 4,
-                 per_device_eval_batch_size: int = 4, warmup_steps: int = 500, weight_decay: float = 0.01,
+                 per_device_eval_batch_size: int = 4, warmup_steps: int = 500, weight_decay: float = 0.01, learning_rate: float = 5e-05,
                  logging_dir: str = "logs", early_stopping_patience: int = 20, early_stopping_threshold: float = 1e-5):
         """
         Create DIETTrainer class
@@ -30,11 +30,13 @@ class DIETTrainer:
                                                per_device_eval_batch_size=per_device_eval_batch_size,
                                                warmup_steps=warmup_steps,
                                                weight_decay=weight_decay,
+                                               learning_rate= learning_rate,
                                                logging_dir=logging_dir,
                                                load_best_model_at_end=True,
                                                metric_for_best_model="loss",
                                                greater_is_better=False,
                                                evaluation_strategy="epoch",
+                                               lr_scheduler_type="cosin",
                                                label_names=["entities_labels", "intent_labels"],
                                                save_total_limit=1)
 

@@ -206,6 +206,7 @@ class DIETClassifierWrapper:
                               per_device_eval_batch_size=self.training_config["per_device_eval_batch_size"],
                               warmup_steps=self.training_config["warmup_steps"],
                               weight_decay=self.training_config["weight_decay"],
+                              learning_rate=self.training_config["learning_rate"],
                               logging_dir=self.training_config["logging_dir"],
                               early_stopping_patience=self.training_config["early_stopping_patience"],
                               early_stopping_threshold=self.training_config["early_stopping_threshold"],
