@@ -175,8 +175,8 @@ class DIETClassifier(BertPreTrainedModel):
         sequence_output = outputs[0][:, 1:]
         sequence_output = self.dropout(sequence_output)
 
-        # pooled_output = outputs[0][:, :1]
-        pooled_output = outputs[1].unsqueeze(1)  #[CLS]
+        pooled_output = outputs[0][:, :1]
+        # pooled_output = outputs[1].unsqueeze(1)  #[CLS]
         pooled_output = self.dropout(pooled_output)
  
         entities_embed = self.entities_dense_embed(sequence_output)

@@ -89,16 +89,24 @@ class DIETClassifierWrapper:
         :param intent_logits: output from model
         :return: dictionary of predicted intent
         """
-        softmax = torch.nn.Softmax(dim=-1)
-        softmax_intents = softmax(intent_logits)
+        
+        softmax_intents = self.softmax(intent_logits)
 
         predicted_intents = []
         for sentence in softmax_intents:
+            sorted_sentence = sentence.clone()
+            sorted_sentence, _ = torch.sort(sorted_sentence)
+
 
             max_probability = torch.argmax(sentence)
             
 
-            predicted_intents.append(max_probability)  
+            predicted_intents.append({
+                "intent": self.intents[max_probability],
+                "intent_ranking": {
+                    intent_name: probability.item() for intent_name, probability in zip(self.intents, sentence)
+                }
+            }) 
 
         return predicted_intents
         
