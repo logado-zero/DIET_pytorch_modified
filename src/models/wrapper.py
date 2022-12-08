@@ -106,10 +106,10 @@ class DIETClassifierWrapper:
                 "intent_ranking": {
                     intent_name: probability.item() for intent_name, probability in zip(self.intents, sentence)
                 }
-            }) 
+            })   
 
         return predicted_intents
-        
+
 
     def convert_entities_logits(self, entities_logits: torch.tensor, offset_mapping: torch.tensor) -> List[
         List[Dict[str, Any]]]:
