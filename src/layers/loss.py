@@ -167,7 +167,7 @@ class SingleLabelDotProductLoss(nn.Module):
         sim_pos = self.sim(inputs_embed, labels_embed_positive.float())
         sim_neg = self.sim(inputs_embed, labels_embed_negative.float())
 
-        #loss = self._loss_margin(sim_pos,sim_neg)
-        loss = self._loss_cross_entropy(sim_pos,sim_neg)
+        loss = self._loss_margin(sim_pos,sim_neg)
+        # loss = self._loss_cross_entropy(sim_pos,sim_neg)
 
         return loss
