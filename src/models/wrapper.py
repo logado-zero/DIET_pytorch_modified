@@ -59,13 +59,14 @@ class DIETClassifierWrapper:
 
         self.training_config = training_config_dict
         self.tokenizer = BertTokenizerFast.from_pretrained(model_config_dict["tokenizer"])
-        self.model = DIETClassifier(config=self.model_config, embedding_dimension= model_config_dict["embedding_dimension"])
+        self.model = DIETClassifier(config=self.model_config)
 
         self.model.to(self.device)
 
         self.softmax = torch.nn.Softmax(dim=-1)
 
         self.synonym_dict = {} if not model_config_dict.get("synonym") else model_config_dict["synonym"]
+        self.use_dot_product = model_config_dict["use_dot_product"]
 
     def tokenize(self, sentences) -> Tuple[Dict[str, Any], List[List[Tuple[int, int]]]]:
         """
@@ -94,6 +95,8 @@ class DIETClassifierWrapper:
 
         predicted_intents = []
         for sentence in softmax_intents:
+            if not self.use_dot_product: sentence = sentence[0]
+
             sorted_sentence = sentence.clone()
             sorted_sentence, _ = torch.sort(sorted_sentence)
 

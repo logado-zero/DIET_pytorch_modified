@@ -225,7 +225,7 @@ if __name__=="__main__":
     model_config = DIETClassifierConfig(**{k: v for k, v in model_config_dict.items() if k in model_config_attributes})
 
     tokenizer = BertTokenizerFast.from_pretrained(model_config_dict["tokenizer"])
-    model = DIETClassifier(config=model_config)
+    model = DIETClassifier(config=model_config, use_dot_product= model_config_dict["use_dot_product"])
 
     model.to(device)
 
