@@ -53,7 +53,9 @@ class DIETClassifier(BertPreTrainedModel):
             checkpoint = None
             if config.intents is None or config.entities is None:
                 raise ValueError(f"Using pretrained from transformers should specific entities and intents")
-            pretrained_model.config.update({"model": config.model, "entities": config.entities, "intents": config.intents})
+            pretrained_model.config.update({"model": config.model, "entities": config.entities, "intents": config.intents, \
+                                            "use_dot_product": config.use_dot_product, "embedding_dimension": config.embedding_dimension})
+            
             config = pretrained_model.config
 
         super().__init__(config)

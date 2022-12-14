@@ -95,7 +95,6 @@ class DIETClassifierWrapper:
 
         predicted_intents = []
         for sentence in softmax_intents:
-            if not self.use_dot_product: sentence = sentence[0]
 
             sorted_sentence = sentence.clone()
             sorted_sentence, _ = torch.sort(sorted_sentence)
