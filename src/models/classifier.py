@@ -33,10 +33,7 @@ class DIETClassifier(BertPreTrainedModel):
 
         :param config: config for model
         """
-        if config.embedding_dimension is None: self.embedding_dimension = 128
-        else: self.embedding_dimension = config.embedding_dimension
         
-        self.use_dot_product = config.use_dot_product
 
         if path.exists(config.model):
             try:
@@ -60,6 +57,11 @@ class DIETClassifier(BertPreTrainedModel):
             config = pretrained_model.config
 
         super().__init__(config)
+        if config.embedding_dimension is None: self.embedding_dimension = 128
+        else: self.embedding_dimension = config.embedding_dimension
+        
+        self.use_dot_product = config.use_dot_product
+        
         self.entities_list = ["O"] + config.entities
         self.num_entities = len(self.entities_list)
         self.intents_list = config.intents
